@@ -643,6 +643,119 @@ int getCost(int cardNumber)
   return -1;
 }
 
+// refactored adventurer. z, drawntreasure are dereferenced inside refactored code
+int rAdventurer(struct gameState *state, int* drawntreasure, int *z, int* temphand, int currentPlayer)
+{
+      int cardDrawn; // declared for refactored independent function
+      while((*drawntreasure)<2){
+	if (state->deckCount[currentPlayer] <1){//if the deck is empty we need to shuffle discard and add to deck
+	  shuffle(currentPlayer, state);
+	}
+	drawCard(currentPlayer, state);
+	cardDrawn = state->hand[currentPlayer][state->handCount[currentPlayer]-1];//top card of hand is most recently drawn card.
+	//if (cardDrawn == copper || cardDrawn == silver || cardDrawn == gold)
+	if (cardDrawn == copper || (cardDrawn == silver && cardDrawn == gold)) // <--BUG
+	  (*drawntreasure)++;
+	else{
+	  temphand[*z]=cardDrawn;
+	  state->handCount[currentPlayer]--; //this should just remove the top card (the most recently drawn one).
+	  (*z)++;
+	}
+      }
+      while(*z-1>=0){
+	state->discard[currentPlayer][state->discardCount[currentPlayer]++]=temphand[*z-1]; // discard all cards in play that have been drawn
+	*z=*z-1;
+      }
+      return 0;
+}
+
+// refactored council_room
+int rCouncil_room(struct gameState *state, int handPos, int currentPlayer)
+{
+      int i; // declared for refactored independent function
+      //+4 Cards
+      //for (i = 0; i < 4; i++)
+      for (i = 1; i < 4; i++) // <-- BUG
+	{
+	  drawCard(currentPlayer, state);
+	}
+			
+      //+1 Buy
+      state->numBuys++;
+			
+      //Each other player draws a card
+      for (i = 0; i < state->numPlayers; i++)
+	{
+	  if ( i != currentPlayer )
+	    {
+	      drawCard(i, state);
+	    }
+	}
+			
+      //put played card in played card pile
+      discardCard(handPos, currentPlayer, state, 0);		
+      return 0;
+}
+
+// refactored remodel
+int rRemodel(int choice1, int choice2, struct gameState *state, int handPos, int currentPlayer)
+{
+      int i, j; // used for refactored independent function
+      j = state->hand[currentPlayer][choice1];  //store card we will trash
+
+      if ( (getCost(state->hand[currentPlayer][choice1]) + 2) > getCost(choice2) )
+	{
+	  return -1;
+	}
+
+      gainCard(choice2, state, 0, currentPlayer);
+
+      //discard card from hand
+      discardCard(handPos, currentPlayer, state, 0);
+
+      //discard trashed card
+      for (i = 0; i < state->handCount[currentPlayer]; i++)
+	{
+	  if (state->hand[currentPlayer][i] == j)
+	    {
+	      discardCard(i, currentPlayer, state, 0);			
+	      break;
+	    }
+	}
+      return 0;
+}
+
+// Refactored smithy
+int rSmithy(struct gameState *state, int handPos, int currentPlayer)
+{
+      int i; // needed for the refactored independent function
+      //+3 Cards
+      //for (i = 0; i < 3; i++)
+      for (i = 0; i < 2; i++) // <- BUG
+	{
+	  drawCard(currentPlayer, state);
+	}
+			
+      //discard card from hand
+      discardCard(handPos, currentPlayer, state, 0);
+      return 0;
+}
+
+// Refactored village
+int rVillage(struct gameState *state, int handPos, int currentPlayer)
+{
+      //+1 Card
+      drawCard(currentPlayer, state);
+			
+      //+2 Actions
+      //state->numActions = state->numActions + 2;
+      state->numActions = state->numActions; // <- BUG
+			
+      //discard played card from hand
+      discardCard(handPos, currentPlayer, state, 0);
+      return 0;
+}
+
 int cardEffect(int card, int choice1, int choice2, int choice3, struct gameState *state, int handPos, int *bonus)
 {
   int i;
@@ -667,7 +780,8 @@ int cardEffect(int card, int choice1, int choice2, int choice3, struct gameState
   switch( card ) 
     {
     case adventurer:
-      while(drawntreasure<2){
+      rAdventurer(state, &drawntreasure, &z, temphand, currentPlayer);
+      /*while(drawntreasure<2){
 	if (state->deckCount[currentPlayer] <1){//if the deck is empty we need to shuffle discard and add to deck
 	  shuffle(currentPlayer, state);
 	}
@@ -685,10 +799,11 @@ int cardEffect(int card, int choice1, int choice2, int choice3, struct gameState
 	state->discard[currentPlayer][state->discardCount[currentPlayer]++]=temphand[z-1]; // discard all cards in play that have been drawn
 	z=z-1;
       }
-      return 0;
+      return 0;*/
 			
     case council_room:
-      //+4 Cards
+      rCouncil_room(state, handPos, currentPlayer);
+      /*//+4 Cards
       for (i = 0; i < 4; i++)
 	{
 	  drawCard(currentPlayer, state);
@@ -709,7 +824,7 @@ int cardEffect(int card, int choice1, int choice2, int choice3, struct gameState
       //put played card in played card pile
       discardCard(handPos, currentPlayer, state, 0);
 			
-      return 0;
+      return 0;*/
 			
     case feast:
       //gain card with cost up to 5
@@ -803,7 +918,8 @@ int cardEffect(int card, int choice1, int choice2, int choice3, struct gameState
       return 0;
 			
     case remodel:
-      j = state->hand[currentPlayer][choice1];  //store card we will trash
+      rRemodel(choice1, choice2, state, handPos, currentPlayer);
+      /*j = state->hand[currentPlayer][choice1];  //store card we will trash
 
       if ( (getCost(state->hand[currentPlayer][choice1]) + 2) > getCost(choice2) )
 	{
@@ -826,10 +942,11 @@ int cardEffect(int card, int choice1, int choice2, int choice3, struct gameState
 	}
 
 
-      return 0;
+      return 0;*/
 		
     case smithy:
-      //+3 Cards
+      rSmithy(state, handPos, currentPlayer);
+      /*//+3 Cards
       for (i = 0; i < 3; i++)
 	{
 	  drawCard(currentPlayer, state);
@@ -837,10 +954,11 @@ int cardEffect(int card, int choice1, int choice2, int choice3, struct gameState
 			
       //discard card from hand
       discardCard(handPos, currentPlayer, state, 0);
-      return 0;
+      return 0;*/
 		
     case village:
-      //+1 Card
+      rVillage(state, handPos, currentPlayer);
+      /*//+1 Card
       drawCard(currentPlayer, state);
 			
       //+2 Actions
@@ -848,7 +966,7 @@ int cardEffect(int card, int choice1, int choice2, int choice3, struct gameState
 			
       //discard played card from hand
       discardCard(handPos, currentPlayer, state, 0);
-      return 0;
+      return 0;*/
 		
     case baron:
       state->numBuys++;//Increase buys by 1!
