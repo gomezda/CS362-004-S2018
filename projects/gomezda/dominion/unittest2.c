@@ -14,24 +14,45 @@
 #include <string.h>
 #include <math.h>
 #include <assert.h>
+#include <stdbool.h>
 
 int main()
 {
+   bool pass = true;
    int i;
    struct gameState G; // create a gameState struct variable
    int totalCards = 27; // total number of different types of cards in the game
 
    // check condition where non of the supply card stacks are empty. isGameOver should return 0 (game not over)
-   for(i=0; i < totalCards; i++) // loop through all the cards
+   for(i=0; i < totalCards; i++) 
    {
       G.supplyCount[i] = 1; // make each card type have a stack of one (not empty)
    }
-   assert(isGameOver(&G) == 0); // if isGameOver returns a nonzero then send an error message to stderr
+   // test running message
+   printf("________________________________________\n\n");
+   printf("Running UNITTEST2 ISGAMEOVER()...\n");
+
+   // check if the game continues if no stacks are empty 
+   if(isGameOver(&G) == 0)
+      printf("PASSED: isGameOver returns 0 when all supply stacks have at least one card\n");
+   else
+   {
+      printf("FAILED: isGameOver does not retun 0 when all supply stacks have at least one card\n");
+      pass = false;
+   }
 
    // check when stack of province cards is empty and the rest of supply piles are not empty
    // From dominion.h, province cards are enum 3. 
    G.supplyCount[3] = 0; // make the province card stack empty, and keep the other card stacks non empty 
-   assert(isGameOver(&G) == 1); // isGameOver should retun 1 if the province card stack is empty 
+
+   // check if the game is over when province stack is empty 
+   if(isGameOver(&G) == 1)
+      printf("PASSED: isGameOver returns 1 when province stack is empty, and other stacks are not empty\n");
+   else
+   {
+      printf("FAILED: isGameOver does not retun 1 when province stack is empty, and other stacks are not empty\n");
+      pass = false;
+   }
 
    // make province stack non empty, then make 3 supply stacks empty, and isGameOver should retun 1 (game ends
    // because there are 3 empty supply card stacks)
@@ -39,16 +60,38 @@ int main()
    G.supplyCount[silver] = 0; // empty the silver stack
    G.supplyCount[gold] = 0; // empty the gold stack
    G.supplyCount[province] = 1; // make the province stack not empty
-   assert(isGameOver(&G) == 1); // Game should be over with 3 empty supply stacks and isGameOver should return 1
 
-   // make all stacks empty, and the game should be over 
-   for(i=0; i < totalCards; i++) // loop through all the cards
+   // check if the game is over when there are 3 empty supply stacks (province stack is not empty) 
+   if(isGameOver(&G) == 1)
+      printf("PASSED: isGameOver returns 1 when 3 stacks are empty, but the province stack is not empty\n");
+   else
    {
-      G.supplyCount[i] = 0; // make each card type have a stack of one (not empty)
+      printf("FAILED: isGameOver does not retun 1 when 3 stacks are empty, but the province stack is not empty\n");
+      pass = false;
    }
-   assert(isGameOver(&G) == 1); // game should be over with every stack set to empty
 
-   printf("All tests for isGameOver() passed.\n");
+   // make all stacks empty
+   for(i=0; i < totalCards; i++) 
+   {
+      G.supplyCount[i] = 0; 
+   }
+
+   // check if the game is over when all stacks are empty 
+   if(isGameOver(&G) == 1)
+      printf("PASSED: isGameOver returns 1 when all stacks are empty\n");
+   else
+   {
+      printf("FAILED: isGameOver does not retun 1 when all stacks are empty\n");
+      pass = false;
+   }
+
+   // overall result
+   if(pass == true)
+      printf("UNITTEST2 ISGAMEOVER() SUCCESSFULLY COMPLETED\n");
+   else
+      printf("UNITTEST2 ISGAMEOVER() FAILED\n");
+
+   printf("________________________________________\n\n");
 
    return 0;
 }

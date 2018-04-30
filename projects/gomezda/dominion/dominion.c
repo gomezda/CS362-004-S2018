@@ -644,27 +644,34 @@ int getCost(int cardNumber)
 }
 
 // refactored adventurer. z, drawntreasure are dereferenced inside refactored code
-int rAdventurer(struct gameState *state, int* drawntreasure, int *z, int* temphand, int currentPlayer)
+//int rAdventurer(struct gameState *state, int* drawntreasure, int *z, int* temphand, int currentPlayer)
+int rAdventurer(struct gameState *state, int currentPlayer)
 {
+      int drawntreasure = 0; // counter for drawn treasure
+      int temphand[MAX_HAND]; // holds the non-treasure cards that are drawn from the deck. MAX_SIZE defined in dominion.h file
+      int z = 0; // temphand indexer
       int cardDrawn; // declared for refactored independent function
-      while((*drawntreasure)<2){
-	if (state->deckCount[currentPlayer] <1){//if the deck is empty we need to shuffle discard and add to deck
+      while(drawntreasure<2)
+      {
+	if (state->deckCount[currentPlayer] < 1) // if deck is empty, shuffle the disccard and add back to deck
+        {
 	  shuffle(currentPlayer, state);
 	}
 	drawCard(currentPlayer, state);
 	cardDrawn = state->hand[currentPlayer][state->handCount[currentPlayer]-1];//top card of hand is most recently drawn card.
 	//if (cardDrawn == copper || cardDrawn == silver || cardDrawn == gold)
 	if (cardDrawn == copper || (cardDrawn == silver && cardDrawn == gold)) // <--BUG
-	  (*drawntreasure)++;
+	  drawntreasure++;
 	else{
-	  temphand[*z]=cardDrawn;
+	  temphand[z]=cardDrawn;
 	  state->handCount[currentPlayer]--; //this should just remove the top card (the most recently drawn one).
-	  (*z)++;
+	  z++;
 	}
       }
-      while(*z-1>=0){
-	state->discard[currentPlayer][state->discardCount[currentPlayer]++]=temphand[*z-1]; // discard all cards in play that have been drawn
-	*z=*z-1;
+      while(z-1 >= 0)
+      {
+	state->discard[currentPlayer][state->discardCount[currentPlayer]++] = temphand[z-1]; // discard all cards in play that have been drawn
+	z=z-1;
       }
       return 0;
 }
@@ -748,8 +755,8 @@ int rVillage(struct gameState *state, int handPos, int currentPlayer)
       drawCard(currentPlayer, state);
 			
       //+2 Actions
-      //state->numActions = state->numActions + 2;
-      state->numActions = state->numActions; // <- BUG
+      //state->numActions = state->numActions + 2; 
+      state->numActions = state->numActions + 1; // <- BUG 
 			
       //discard played card from hand
       discardCard(handPos, currentPlayer, state, 0);
@@ -780,7 +787,7 @@ int cardEffect(int card, int choice1, int choice2, int choice3, struct gameState
   switch( card ) 
     {
     case adventurer:
-      rAdventurer(state, &drawntreasure, &z, temphand, currentPlayer);
+      rAdventurer(state, currentPlayer);
       /*while(drawntreasure<2){
 	if (state->deckCount[currentPlayer] <1){//if the deck is empty we need to shuffle discard and add to deck
 	  shuffle(currentPlayer, state);
