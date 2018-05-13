@@ -98,10 +98,13 @@ unittestresults.out: unittest1.c unittest2.c unittest3.c unittest4.c cardtest1.c
 	cardtest4 >> unittestresults.out
 	gcov -b cardtest4.c >> unittestresults.out
 
+testme: testme.c
+	gcc -o testme -g testme.c $(CFLAGS)
+
 all: playdom player 
 
 clean:
 	rm -f *.o playdom.exe playdom player player.exe  *.gcov *.gcda *.gcno *.so *.out testDrawCard testDrawCard.exe
 
 cleanall:
-	rm unittest1 unittest2 unittest3 unittest4 cardtest1 cardtest2 cardtest3 cardtest4 *.gcov *.gcda *.gcno *.so *.out
+	rm unittest1 unittest2 unittest3 unittest4 cardtest1 cardtest2 cardtest3 cardtest4 testme *.gcov *.gcda *.gcno *.so *.out
