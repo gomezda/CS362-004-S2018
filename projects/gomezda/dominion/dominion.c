@@ -200,7 +200,6 @@ int initializeGame(int numPlayers, int kingdomCards[10], int randomSeed,
 
 int shuffle(int player, struct gameState *state) {
  
-
   int newDeck[MAX_DECK];
   int newDeckPos = 0;
   int card;
@@ -224,7 +223,7 @@ int shuffle(int player, struct gameState *state) {
     state->deck[player][i] = newDeck[i];
     state->deckCount[player]++;
   }
-
+  
   return 0;
 }
 
@@ -643,37 +642,36 @@ int getCost(int cardNumber)
   return -1;
 }
 
-// refactored adventurer. z, drawntreasure are dereferenced inside refactored code
-//int rAdventurer(struct gameState *state, int* drawntreasure, int *z, int* temphand, int currentPlayer)
-int rAdventurer(struct gameState *state, int currentPlayer)
+// refactored adventurer
+void rAdventurer(struct gameState *state, int currentPlayer)
 {
-      int drawntreasure = 0; // counter for drawn treasure
-      int temphand[MAX_HAND]; // holds the non-treasure cards that are drawn from the deck. MAX_SIZE defined in dominion.h file
-      int z = 0; // temphand indexer
-      int cardDrawn; // declared for refactored independent function
-      while(drawntreasure<2)
+   int drawntreasure = 0; // tracks the treasure cards that are drawn
+   int z = 0; // counter for the temphand
+   int cardDrawn; // declared for refactored independent function
+   int temphand[MAX_HAND];
+   while(drawntreasure < 2)
+   {
+      if(state->deckCount[currentPlayer] < 1) // if the deck is empty, shuffle discard and add to deck
       {
-	if (state->deckCount[currentPlayer] < 1) // if deck is empty, shuffle the disccard and add back to deck
-        {
-	  shuffle(currentPlayer, state);
-	}
-	drawCard(currentPlayer, state);
-	cardDrawn = state->hand[currentPlayer][state->handCount[currentPlayer]-1];//top card of hand is most recently drawn card.
-	//if (cardDrawn == copper || cardDrawn == silver || cardDrawn == gold)
-	if (cardDrawn == copper || (cardDrawn == silver && cardDrawn == gold)) // <--BUG
-	  drawntreasure++;
-	else{
-	  temphand[z]=cardDrawn;
-	  state->handCount[currentPlayer]--; //this should just remove the top card (the most recently drawn one).
-	  z++;
-	}
+         shuffle(currentPlayer, state);
       }
-      while(z-1 >= 0)
+      drawCard(currentPlayer, state);
+      cardDrawn = state->hand[currentPlayer][state->handCount[currentPlayer] - 1];//top card of hand is most recently drawn card.
+      if (cardDrawn == copper || cardDrawn == silver || cardDrawn == gold)
+      //if (cardDrawn == copper || (cardDrawn == silver && cardDrawn == gold)) // <--BUG
+         drawntreasure++;
+      else
       {
-	state->discard[currentPlayer][state->discardCount[currentPlayer]++] = temphand[z-1]; // discard all cards in play that have been drawn
-	z=z-1;
+         temphand[z]=cardDrawn;
+	 state->handCount[currentPlayer]--; //this should just remove the top card (the most recently drawn one).
+	 z++;
       }
-      return 0;
+   }
+   while(z - 1 >= 0)
+   {
+      state->discard[currentPlayer][state->discardCount[currentPlayer]++]=temphand[z - 1]; // discard all cards in play that have been drawn
+      z = z - 1;
+   }
 }
 
 // refactored council_room
@@ -755,8 +753,8 @@ int rVillage(struct gameState *state, int handPos, int currentPlayer)
       drawCard(currentPlayer, state);
 			
       //+2 Actions
-      //state->numActions = state->numActions + 2; 
-      state->numActions = state->numActions + 1; // <- BUG 
+      //state->numActions = state->numActions + 2;
+      state->numActions = state->numActions; // <- BUG
 			
       //discard played card from hand
       discardCard(handPos, currentPlayer, state, 0);
